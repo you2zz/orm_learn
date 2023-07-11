@@ -1,0 +1,3 @@
+LOGIN_POSTGRESQL=...(логин подключения к postgresql)
+PASSWORD_POSTGRESQL=...(пароль подключения к postgresql)
+DATA_BASE_NAME=...(название создаваемой БД)
