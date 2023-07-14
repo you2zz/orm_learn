@@ -1,6 +1,8 @@
 import sqlalchemy as sq
 from sqlalchemy.orm import declarative_base, relationship
 
+import or_
+
 Base = declarative_base()
 
 class Publisher(Base):
@@ -53,14 +55,23 @@ def create_tables(engine):
     Base.metadata.create_all(engine) # создает таблицы
 
 def get_sales(session, author_id = 0, publisher_name = ''):
-    if author_id != 0:
-        res = session.query(Book.title, Shop.name, Sale.price, Sale.count, Sale.date_sale).\
-            join(Publisher).join(Stock).join(Sale).join(Shop).\
-            filter(Publisher.id==author_id)
-    else:
-        res = session.query(Book.title, Shop.name, Sale.price, Sale.count, Sale.date_sale).\
-            join(Publisher).join(Stock).join(Sale).join(Shop).\
-            filter(Publisher.name.ilike(f'%{publisher_name}%'))
+    res = session.query(Book.title, Shop.name, Sale.price, Sale.count, Sale.date_sale).\
+          join(Publisher).join(Stock).join(Sale).join(Shop).\
+          filter(or_(Publisher.id==author_id, Publisher.name.ilike(f'%{publisher_name}%')))
+
+    for book, shop, price, count, date in res:
+        print(f'{book: <40} | {shop: <10} | {price*count: <8} | {date.strftime("%d-%m-%Y")}')
+
+
+# def get_sales(session, author_id = 0, publisher_name = ''):
+#     if author_id != 0:
+#         res = session.query(Book.title, Shop.name, Sale.price, Sale.count, Sale.date_sale).\
+#             join(Publisher).join(Stock).join(Sale).join(Shop).\
+#             filter(Publisher.id==author_id)
+#     else:
+#         res = session.query(Book.title, Shop.name, Sale.price, Sale.count, Sale.date_sale).\
+#             join(Publisher).join(Stock).join(Sale).join(Shop).\
+#             filter(Publisher.name.ilike(f'%{publisher_name}%'))
     
 
     for book, shop, price, count, date in res:
