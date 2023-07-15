@@ -1,7 +1,7 @@
 import sqlalchemy as sq
 from sqlalchemy.orm import declarative_base, relationship
 
-import or_
+from sqlalchemy import or_
 
 Base = declarative_base()
 
