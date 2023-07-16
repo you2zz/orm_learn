@@ -9,18 +9,9 @@ class Publisher(Base):
     __tablename__ = "publisher"
     id = sq.Column(sq.Integer, primary_key=True)
     name = sq.Column(sq.String(length=40), unique=True, nullable=False)
+    books = relationship("Book", backref="publisher", cascade="all, delete")
     def __str__(self):
         return f'Publisher {self.id}: {self.name}'
-    
-class Book(Base):
-    __tablename__ = "book"
-    id = sq.Column(sq.Integer, primary_key=True)
-    title = sq.Column(sq.String(length=250), nullable=False)
-    id_publisher = sq.Column(sq.Integer, sq.ForeignKey("publisher.id"), nullable=False)    
-    shop = relationship('Stock', backref='book')
-    author = relationship("Publisher", backref="book")
-    def __str__(self):
-        return f'Book {self.id}: {self.title}'    
 
 class Stock(Base):
     __tablename__ = "stock"
@@ -28,14 +19,24 @@ class Stock(Base):
     id_book = sq.Column(sq.Integer, sq.ForeignKey("book.id"), nullable=False)
     id_shop = sq.Column(sq.Integer, sq.ForeignKey("shop.id"), nullable=False)
     count = sq.Column(sq.Integer, nullable=False)
+    sales = relationship("Sale", backref="stock", cascade="all, delete")
     def __str__(self):
         return f'Stock {self.id}: {self.id_book}, {self.id_shop}, {self.count}'
+    
+class Book(Base):
+    __tablename__ = "book"
+    id = sq.Column(sq.Integer, primary_key=True)
+    title = sq.Column(sq.String(length=250), nullable=False)
+    id_publisher = sq.Column(sq.Integer, sq.ForeignKey("publisher.id"), nullable=False)    
+    stock_book = relationship("Stock", backref="book", cascade="all, delete")
+    def __str__(self):
+        return f'Book {self.id}: {self.title}'     
     
 class Shop(Base):
     __tablename__ = "shop"
     id = sq.Column(sq.Integer, primary_key=True)
     name = sq.Column(sq.String(length=100), unique=True, nullable=False)
-    book = relationship("Stock", backref='shop')
+    stock_shop = relationship("Stock", backref="shop", cascade="all, delete")
     def __str__(self):
         return f'Shop {self.id}: {self.name}'
     
@@ -46,7 +47,6 @@ class Sale(Base):
     date_sale = sq.Column(sq.Date, nullable=False)
     id_stock = sq.Column(sq.Integer, sq.ForeignKey("stock.id"), nullable=False)
     count = sq.Column(sq.Integer, nullable=False)    
-    sale_stock = relationship("Stock", backref="sale")
     def __str__(self):
         return f'{self.price} | {self.date_sale}'
 
@@ -54,6 +54,8 @@ def create_tables(engine):
     Base.metadata.drop_all(engine) # удаляет данные из базы данных
     Base.metadata.create_all(engine) # создает таблицы
 
+
+# # Вариант 1 (не работает фильтр по id, но работает по названию издателя)
 # def get_sales(session, author_id = 0, publisher_name = ''):
 #     res = session.query(Book.title, Shop.name, Sale.price, Sale.count, Sale.date_sale).\
 #           join(Publisher).join(Stock).join(Sale).join(Shop).\
@@ -62,7 +64,7 @@ def create_tables(engine):
 #     for book, shop, price, count, date in res:
 #         print(f'{book: <40} | {shop: <10} | {price*count: <8} | {date.strftime("%d-%m-%Y")}')
 
-
+#Вариант 2
 def get_sales(session, author_id = 0, publisher_name = ''):
     if author_id != 0:
         res = session.query(Book.title, Shop.name, Sale.price, Sale.count, Sale.date_sale).\
